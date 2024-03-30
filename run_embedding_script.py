@@ -14,12 +14,11 @@ job_plugin = studio.installed_plugins["jobs"]
 
 def run():
     for embed_dim, model_name in embedding_model_mappings.items():
-        job = job_plugin.create_job(
+        job_plugin.run(
             name=f"Generate embeddings for {model_name} with embedding size: {embed_dim}",
             command=f"python src/generate_embeddings.py --model_name {model_name} --embed_dim {embed_dim}",
             machine=Machine.A10G,
         )
-        job.run()
 
 
 if __name__ == "__main__":
