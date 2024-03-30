@@ -1,7 +1,10 @@
 from argparse import ArgumentParser
 from functools import partial
+from logging import getLogger
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
+
+logger = getLogger(__name__)
 
 
 def run(model_name: str, embed_dim: int) -> dict:
@@ -16,7 +19,10 @@ def run(model_name: str, embed_dim: int) -> dict:
     dataset = load_dataset(
         "nikhilchigali/wikianswers_small", cache_dir="data/wikianswers_small/"
     )
+    logger.info(f"Loaded dataset with {len(dataset)} examples")
+
     model = SentenceTransformer(model_name)
+    logger.info(f"Loaded model: {model_name}")
 
     def embed(model, item):
         return {
@@ -26,6 +32,7 @@ def run(model_name: str, embed_dim: int) -> dict:
         }
 
     embed_partial = partial(embed, model)
+    logger.info(f"Generating embeddings for {len(dataset)} examples...")
 
     return dataset.map(
         embed_partial,
@@ -40,5 +47,9 @@ if __name__ == "__main__":
     arg_parser.add_argument("--model_name", type=str, required=True)
     arg_parser.add_argument("--embed_dim", type=int, required=True)
     args = arg_parser.parse_args()
+    logger.info(
+        f"Generating embeddings for model: {args.model_name} with embedding dimension: {args.embed_dim}"
+    )
     embedded_dataset = run(args.model_name, args.embed_dim)
+    logger.info(f"Saving embeddings to disk")
     embedded_dataset.save_to_disk(f"data/wikianswers_embeddings_{args.embed_dim}")
