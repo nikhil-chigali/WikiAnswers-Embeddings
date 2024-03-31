@@ -3,7 +3,9 @@ from functools import partial
 from logging import getLogger
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
+import logging
 
+logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 
 
@@ -19,7 +21,8 @@ def run(model_name: str, embed_dim: int) -> dict:
     dataset = load_dataset(
         "nikhilchigali/wikianswers_small", cache_dir="data/wikianswers_small/"
     )
-    logger.info(f"Loaded dataset with {len(dataset)} examples")
+    n = len(dataset["train"])
+    logger.info(f"Loaded dataset with {n} examples")
 
     model = SentenceTransformer(model_name)
     logger.info(f"Loaded model: {model_name}")
@@ -32,9 +35,9 @@ def run(model_name: str, embed_dim: int) -> dict:
         }
 
     embed_partial = partial(embed, model)
-    logger.info(f"Generating embeddings for {len(dataset)} examples...")
+    logger.info(f"Generating embeddings for {n} examples...")
 
-    return dataset.map(
+    return dataset["train"].map(
         embed_partial,
         batched=True,
         batch_size=64,
